@@ -1,0 +1,275 @@
+<!DOCTYPE doctype PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+	<meta http-equiv="Expires" content="no-expire">
+  <meta name="Author" content="Kurt Schmidt">
+	<meta name="Publisher" content="Drexel University">
+	<meta name="Copyright" content="">
+	<meta name="Keywords" content="Programming Techniques Unix">
+	<meta name="Description"
+		content="Lab for CS265 - Adv. Programming Techniques">
+	<meta name="Pagetype" content="Lab">
+	<meta name="Audience" content="All">
+	<link rel='shortcut icon' type='image/gif'
+		href='../../images/drexel.gif'></link>
+	<script language="JavaScript" src="../../courseInfo.js"></script>
+	<script language="JavaScript" src="../../../Scripts/courseFormat.js"></script>
+  <title>Assignment -- Java Infix Parser</title>
+</head>
+
+
+<body text="#330099" link="#000066" vlink="#000066" alink="#FF0000"
+	background="../../../images/blueTexture.jpeg">
+
+<h1> Parsing Infix Expressions </h1>
+
+<h2> Introduction </h2>
+
+<p> This assignment will give you practice with Java, interfaces (not Java
+interfaces, but the more general notion), and build tools (ant, jar).
+
+<p> You will create a calculator in Java that parses an infix expression into
+postfix, and then evaluates it. </p>
+
+<p> You will use <tt>ant</tt> <!-- KSS, 11/07 along with JUnit --> to build
+<!-- KSS, 11/07 and test --> your program. </p>
+
+<hr>
+<h2> The Assignment </h2>
+
+<p> You will write a program that parses infix expressions (described below)
+into appropriate <tt>Token</tt>s (operator or operand), stored in some
+linear container (<tt>ArrayList</tt> ?), passes the infix expression to a
+function that returns the expression to postfix form, then passes it to a
+function which evaluates the postfix expression, returns an
+<tt>integer</tt>.
+
+<p> We'll be doing only integer arithmetic.  No float types.  Also, though
+the inputs are positive, the intermediate results might not be. </p>
+
+<p> The operators you will encounter are <tt>+</tt>, <tt>-</tt>, <tt>*</tt>,
+<tt>/</tt>, <tt>%</tt> (modulus).  You must also be prepared to
+handle parenthesis. </p>
+
+<p> Your code will be documented properly<!-- KSS, 5/08, and tested using
+JUnit-->. </p>
+
+<p> All will be done through an <tt>ant</tt> file. </p>
+
+<!-- Not this time, KSS, 11/07
+<p> Your JUnit harness will produce a log file.  Please just leave the
+default name. </p>
+-->
+
+<p> I will also run Javadoc; I expect to get something useful out. </p>
+
+
+<hr>
+<h3> Your code </h3>
+
+<p> I expect to see, at a minimum, 2 methods: </p>
+	<ul>
+		<li> <tt>infix2postfix</tt> </li>
+		<li> <tt>evalPostfix</tt> </li>
+	</ul>
+
+<p> I've written <a target='_blank' href='token.tgz'>Token classes</a> for
+you (the files are in this directory).  You do need to fill in the
+<tt>Operator.getPrec()</tt> method, assign appropriate (relative)
+precedences to the operators. </p>
+
+<p> The 2 types, <tt>Operand</tt> and <tt>Operator</tt> share a base class,
+<tt>Token</tt>, so that you can store an entire expression, in a generic
+ArrayList which holds <tt>Token</tt>s.  We need to get used to generics.
+<tt>Sample.java</tt>, in the directory, shows the creation and storage of
+various Tokens in a generic collection. </p>
+
+<p> <tt>opType</tt> is an example of how we did "enums" pre- Java 1.5.  Note
+that you can make these types smarter by assigning precedence right there.
+You're welcome to make this modification. </p>
+
+<p> Yes, you need to use my Token classes. </p>
+
+<hr>
+<h3> Input </h3>
+
+<p> Your program will read a file called <tt><b>input.infix</b></tt> that
+contains a number of expressions, one per line. </p>
+
+<p> Each line has, at most, 80 characters.  Tokens will be separated by white
+space.  Operands will be strictly non-negative integers.  Operators are: {
+<tt>+ - * / %</tt> } for addition, subtraction, multiplication, division,
+and modulus, respectively. </p>
+
+<p> Here is a sample input:
+
+	<blockquote>
+<pre>13 + 23 - 42 * 2
+3 * ( 5 - 2 ) % 5</pre>
+	</blockquote>
+
+<p> A sample input file can be found <a href="input.infix">here</a>. </p>
+
+<p> For my part, I promise that all expressions are valid. </p>
+
+<hr>
+<h3> Output </h3>
+
+<p> Your program will output, for each input expression, on one line: </p>
+
+<blockquote>
+	<i>postfix expression</i> = <i>result</i></blockquote>
+
+<p> , where <i>result</i> is the value of expression.
+
+<p> There will be one expression per line (same as the input).  Single-space
+only, please. </p>
+
+<p> So, given the input, above, I'd expect the output to be: </p>
+
+	<blockquote>
+<pre>13 23 + 42 2 * - = -48
+3 5 2 - * 5 % = 4</pre>
+	</blockquote>
+
+<hr>
+<h3> Documentation </h3>
+
+<p> I am NOT looking for a lot of comments here.  Remember, your code should
+read like a book.  But, each class should have a description, and each
+method should have a description and a discussion of inputs, side-effects,
+etc. </p>
+
+<p> You will use Javadoc-style comments.  HTML documentation will be created
+from your code, using <tt>ant</tt> (and <tt>javadoc</tt>, of course). </p>
+
+<p> The HTML files will end up in a subdirectory of your source dir (which is
+also the CWD) called <tt><b>docs/</b></tt>. </p>
+
+<p> See <tt>CS265/Labs/Java/Javadoc/</tt> for an example. </p>
+
+<hr>
+<h3> Ant </h3>
+
+<p> You will include a <tt>build.xml</tt> that has, at a minimum, the
+following targets: </p>
+
+<ul>
+	<li> <tt><b>compile</b></tt> - compiles all of your <tt>.java</tt>
+		files. </li>
+	<li> <tt><b>run</b></tt> - runs your program, assuming that the input file
+		is in the current directory.  Depends on the <tt>compile</tt>
+		target.<br> <b>Note</b>, the code will need to be compiled from your
+		source.  I will delete all <tt>class</tt> files before we start, so...
+		The <tt>run</tt> target will make sure all of your source files are run
+		through <tt>javac</tt>. </li>
+<!-- KS, 11/07, no JUnit just now 
+	<li> <tt><b>test</b></tt> - uses a <tt>junit</tt> task to run your test
+		suite.  It will be the default target for the project.  Depends on
+		compile. </li>
+-->
+	<li> <tt><b>doc</b></tt> - runs <tt>javadoc</tt> on all of your source
+		files, creating files in <tt>./docs</tt> </li>
+</ul>
+
+<p> Note, since you're supplying <tt>build.xml</tt>, the names for the rest
+of the code doesn't matter.  You can have 1 class, or 18 (though, that is
+probably overkill).  The filenames don't matter to me (that is, they should
+be good names, but I don't need to know them ahead of time). </p>
+
+<!-- not this time, KSS, 11/07
+<hr>
+<h3> Testing (JUnit) </h3>
+
+<p> Follow the example in my <tt>CS265/Labs/Java/Junit</tt> directory, and
+read through the lecture slides on the subject.  There is a great deal going
+on.  Again, we're just getting our toes wet, some basic notion of usage. </p>
+
+<p> Provide a test class called <tt><b>testCalc</b></tt> (in a file named
+<tt><b>testCalc.java</b></tt>) that tests each of the methods you write
+(other than main).  Doesn't matter which of your classes they're in; create
+objects, call methods, beat them up. </p>
+
+<p> Remember, write the test first, then implement the method. </p>
+-->
+
+<hr>
+<a name='alg'><h2>Algorithms </h2> </a>
+
+<h3> Infix to Postfix </h3>
+<ul>
+	<li> Append a right paren ')' to the end of the input expression. </li>
+	<li> Push a left paren '(' onto the stack. </li>
+	<li> Start at the first token.  For each token:
+   <ul>
+		<li> If it is a left paren, push it onto the stack. </li>
+		<li> If it is a right paren, pop operators from the stack and
+				append to the postfix expression, until a left paren is
+				encountered on the stack.  Remove and discard the left
+				paren. </li>
+		<li> If it is an operand, append it to the postfix expression. </li>
+		<li> If it is an operator, then pop operators from the stack and
+			append to the postfix expression while the operators have
+			<i>equal or higher</i> precedence than the current token.  Push
+			current token (operator) onto the stack.
+			<br>Remember, we're not treating the parentheses as operators, they're
+			being handled separately. </li>
+	</ul>
+	<li> Continue until you've reached the end of the expression.  If the input
+	expression was valid, then evey pop() should've been fine, and the
+	stack should be empty. </li>
+</ul>
+
+<h3> Evaluating Postfix Expressions </h3>
+<ul> Start at the first token.  For each token:
+   <ul> If it is an operand, push it on the stack.<br>
+   Else if it is an operator, then
+      <ul>
+			<li> <i>y</i> &larr; pop top value </li>
+			<li> <i>x</i> &larr; pop top value </li>
+			<li> <i>result</i> &larr; <i>x</i> (oper) <i>y</i> </li>
+			<li> push <i>result</i> onto stack </li>
+  	 	</ul>
+		fi
+      </ul>
+   </ul>
+	Continue until you've reached the end of the expression.  There should be
+	exactly one element in the stack; the result of the expression.
+</ul>
+
+<p> The main function will parse the input file and hand the expressions
+to this function to evaluate.  See the <tt>StreamTokenizer</tt>
+examples.  Or, since the Java community is moving away from this, you might
+look at the <tt>String.split</tt> methods. </p>
+
+<hr>
+<h2> Submission </h2>
+
+<ul>
+	<li> <tt><b>build.xml</b></tt> - your ant configuration file </li>
+	<li> <u>all</u> of your <strong>source</strong> files.  <tt>.class</tt>
+		files will be deleted before I start, so, must be built from
+		source. </li>
+	<!-- not this time, KSS, 11/07
+	<li> <tt><b>testCalc.java</b></tt> - your JUnit test suite. </li>
+	-->
+	<li> Whatever other Java files you've written for this assignment. </li>
+	<li> <tt><b>README</b></tt> &mdash; A quick tour of the input files, a
+		description of your ant targets, and a note about the generated
+		documentation. </li>
+</ul>
+
+<p> If you supply <tt><b>input.infix</b></tt> it <i>will</i> be
+overwritten. </p>
+
+<p> <b>Please note</b>  You will use the filenames as listed here, and submit
+them all to the proper assignment.  If this is <b>not</b> clear, then see me
+in class.  If I get programs submitted to the wrong directories, I will be
+irate, which may, in some subconscious way, affect your grades.
+Adversely. </p>
+
+</font>
+</body>
+</html>

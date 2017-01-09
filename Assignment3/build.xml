@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+   <project name="Assignment 3" default="info">
+   
+   <target name="info">
+      <echo>A postfix calculator in java</echo>
+   </target>
+   
+	<target name="compile">
+		<javac srcdir="./" destdir="build/classes"/>
+    </target>
+
+	<target name="run" depends="compile">
+		<java classname="calculator">
+			<classpath>
+				<pathelement path="${classpath}" />
+				<pathelement location="." />
+			</classpath>
+		</java>
+	</target>
+
+	<target name="clean">
+		<delete>
+			<fileset dir="./">
+				<include name='*.class'>
+				</include>
+			</fileset>
+		</delete>
+	</target>
+
+  <!-- Generate javadocs for current project into ${doc.dir} -->
+  <target name="doc" depends="run" description="generate documentation">
+    <javadoc sourcepath="${source.dir}" destdir="build/classes"/>
+  </target>
+
+</project>
