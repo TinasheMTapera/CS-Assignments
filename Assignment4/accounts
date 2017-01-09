@@ -1,0 +1,369 @@
+#!/usr/bin/env python
+
+# Tinashe M Tapera
+# CS265 Assignment 4
+# Purpose: A command line utility/interface to browse
+# a log file of bank activity called "accounts".
+# this accounts file is keyed in the
+# environment by a variable called $ACCT_LIST
+
+import os
+import sys
+import time
+import datetime
+import collections
+
+#-------------------------------------------------------------#
+# get the file
+try:
+	myfile = open(os.environ['ACCT_LIST'],'r')
+except:
+	print("ERROR: Database not found in environment.")
+
+# data structures for the things we will be working with:
+# account num, account holder name, date, transaction, and amount
+
+# create a dictionary to store all the data in one place first
+fields = ["AccNum", "FN", "Date", "TransType", "Value"]
+allData = {i:[] for i in fields}
+
+# read the file and assign each value to the correct list
+for line in myfile.readlines():
+	#print(line)
+	data = line.split(":")
+	allData["AccNum"].append(int(data[0]))
+	allData["FN"].append(data[1])
+	allData["Date"].append(datetime.datetime.strptime(data[2],'%y.%m.%d').date())
+	allData["TransType"].append(data[3])
+	allData[ "Value"].append(float(data[4].strip('\n')))
+
+myfile.close()
+# sanity check
+#print(allData)
+#-------------------------------------------------------------#
+
+#-------------------------------------------------------------#
+# a print function that prints out the values in a list of tuples
+def fancyOutput(fields,data):
+	
+	for each in data:
+		x=0
+		print("\n--------")
+		for i in range(len(fields)):
+			myObject = str(fields[i]) + ": " + str(each[x])
+			print(myObject)
+			x = x+1
+		print("--------\n")
+#-------------------------------------------------------------#
+
+#-------------------------------------------------------------#
+# a calculate function to return a user's current balance given
+# a list of tuples with their transactions
+
+def calc(data,account):
+	transactions = [item for item in data if item[1] == account]
+	result = 0
+	for item in transactions:
+		if item[3] == "W":
+			result = result - item[2]
+		elif item[3] == "D":
+			result = result + item[2]
+	temp = [transactions[0][x] for x in range(2)]
+	temp.append(result)
+	return(tuple(temp))
+
+#-------------------------------------------------------------#
+
+#-------------------------------------------------------------#
+# a write function to add a new transaction to the database;
+# given a list of tuples of the new transactions and updates
+# the dictionary, then writes to file
+
+def updateDB(tuples):
+	
+	for entry in tuples:
+		allData["AccNum"].append(entry[1])
+		allData["FN"].append(entry[0])
+		allData["Date"].append(entry[4])
+		allData["TransType"].append(entry[3])
+		allData[ "Value"].append(entry[2])
+	
+
+# get the file
+	try:
+		if os.environ.has_key("HOME"):
+			f = open(os.environ['ACCT_LIST'],"a")
+	except:
+		print("ERROR: Database not found in environment.")
+
+	sep = ":"
+	d = allData["Date"][-1]
+	newLine = str(allData["AccNum"][-1]) + sep + allData["FN"][-1] + sep +d.strftime("%y.%m.%d") + sep + allData["TransType"][-1] + sep + str(str(allData["Value"][-1])+"0") + "\n"
+
+	f.write(newLine)
+	f.close()
+#-------------------------------------------------------------#
+
+#-------------------------------------------------------------#
+# the info option -i
+
+def accInfo(data):
+#1: Display an enumerated, alphabetical list 
+#   of account holders' names, followed
+#   by the account number 
+#   (Note, these lines should be unique)
+#2: allow the user to choose an account by 
+#   entering the number, or to quit
+#   by entering a q
+#3: list account info: acc number, holder's
+#   name, and balance
+#4: return to list of account names
+	cont = "Y"
+	while cont in ["Y","y"]:
+		workingData = []
+		for x in range(len(data["AccNum"])):
+			workingData.append((data["FN"][x],data["AccNum"][x],data["Value"][x],data["TransType"][x]))
+	
+		accounts = []
+		for x in range(len(data["AccNum"])):
+			accounts.append((workingData[x][:2]))
+		accounts = list(set(accounts))
+		accounts = sorted(accounts, key=lambda tup: (tup[0], tup[1]))
+		print("\nViewing Current Accounts")
+		fancyOutput(["Full Name","Number"],accounts)
+
+		# view account balance
+		view = raw_input("Enter Acc Number for More Acc Information (Press Q to exit):\n")	
+		try:
+			if int(view) in data["AccNum"]:
+				#print("Getting data...")
+				values = []
+				for x in range(len(data["AccNum"])):
+					values.append((workingData[x][:4]))
+				values = list(set(values))
+				values = sorted(values, key=lambda tup: (tup[0], tup[1], tup[2]))
+				balance = calc(values, int(view))
+				print("\nViewing Account Info")
+				fancyOutput(["Full Name","Number","Current Balance"],[balance])
+			else:
+				print("Acc number " + str(view) + " does not exist")
+				sys.exit(999)
+		except ValueError, val:
+			if view == "q" or view == "Q":
+				sys.exit(999)
+			else:
+				print("Invalid input")
+		
+		cont = raw_input("Back to menu? (Y/N):\n")
+#-------------------------------------------------------------#
+
+#-------------------------------------------------------------#
+# the history option -h
+
+def history(data):
+# 1. Display an enumerated, alphabetical list of 
+#    holders, followed by the account number
+# 2. allow the user to choose an account by entering 
+#    the number, or to quit by entering a q
+# 3. list all the transactions for that account, 
+#    in chronological order
+# 4. print, on one line, the date, the type 
+#    (deposit or withdrawal), and the amount. 
+	cont = "Y"
+	while cont in ["Y","y"]:
+		workingData = []
+
+		for x in range(len(data["AccNum"])):
+			workingData.append((data["FN"][x],data["AccNum"][x],data["Value"][x],data["TransType"][x], data["Date"][x]))
+		#print(workingData)
+		accounts = []
+		for x in range(len(data["AccNum"])):
+			accounts.append((workingData[x][:2]))
+		accounts = list(set(accounts))
+		accounts = sorted(accounts, key=lambda tup: (tup[0], tup[1]))
+		print("\nViewing Current Accounts")
+		fancyOutput(["Full Name","Number"],accounts)
+	
+		# choose an account and view transactions
+		view = raw_input("Enter Acc Number for Acc History\n(Press Q to exit):")	
+		try:
+			if int(view) in data["AccNum"]:
+				#print("Getting data...")
+				values = []
+				for x in range(len(data["AccNum"])):
+					values.append((workingData[x]))
+				values = list(set(values))
+				values = sorted(values, key=lambda tup: (tup[0], tup[1], tup[4]))
+				transactions = [item for item in values if item[1] == int(view)]
+				print(transactions)
+				print("\nViewing History for Account " + view)
+				
+				print("\n--------")
+				for tup in transactions:
+					if tup[3] == "W":
+						print(str(tup[4]) + " - Withdrawal - " + str(tup[2]))
+					elif tup[3] == "D":
+						print(str(tup[4]) + " - Deposit - " + str(tup[2])) 
+				print("--------\n")
+	
+			else:
+				print("Acc number " + str(view) + " does not exist")
+				sys.exit(999)
+		except ValueError, val:
+			if view == "q" or view == "Q":
+				sys.exit(999)
+			else:
+				print("Invalid input")
+		
+		cont=raw_input("Back to menu? (Y/N):\n") 
+#-------------------------------------------------------------#
+
+#-------------------------------------------------------------#
+# the transaction option -t
+
+def transaction(data):
+# 1. get an account choice, as above, with an option 
+#    to create a new account (be careful that 
+#    the account # doesn't already exist) 
+# 2. prompt for:
+#    i: Type (withdrawal or deposit), using 
+#    simple keystrokes (w or d, followed by [enter])
+#    ii: The amount
+# 3. Use the current day's date
+# 4. Return to the choose-account menu 
+	totalChanges = []
+	theDate = datetime.date.today()
+	cont = "Y"
+	while cont in ["Y","y"]:
+
+		workingData = []
+
+		for x in range(len(data["AccNum"])):
+			workingData.append((data["FN"][x],data["AccNum"][x],data["Value"][x],data["TransType"][x], data["Date"][x]))
+		#print(workingData)
+		accounts = []
+		for x in range(len(data["AccNum"])):
+			accounts.append((workingData[x][:2]))
+		accounts = list(set(accounts))
+		accounts = sorted(accounts, key=lambda tup: (tup[0], tup[1]))
+		print("\nViewing Current Accounts")
+		fancyOutput(["Full Name","Number"],accounts)
+
+		# choose an account and view transactions
+		view = raw_input("1. Enter Acc Number to Make a Transaction\n2. Enter New Number to Create An Account\n(Press Q to exit):")	
+		try:
+			if int(view) in data["AccNum"]:
+			
+				values = []
+				for x in range(len(data["AccNum"])):
+					values.append((workingData[x]))
+				values = list(set(values))
+				values = sorted(values, key=lambda tup: (tup[0], tup[1], tup[4]))
+				transactions = [item for item in values if item[1] == int(view)]
+
+				#calculate the balance
+				values2 = []
+				for x in range(len(data["AccNum"])):
+					values2.append((workingData[x][:4]))
+				values2 = list(set(values))
+				values2 = sorted(values, key=lambda tup: (tup[0], tup[1], tup[2]))
+				balance = calc(values2, int(view))
+				
+				fancyOutput(["Full Name","Number","Current Balance"],[balance])
+
+				try:
+					transType = str(raw_input("Withdrawal (w) or Deposit (d)?\n"))
+					if transType in ["w", "W"]:
+						transType = "W"
+					elif transType in ["d", "D"]:
+						transType = "D"
+					else:
+						raise ValueError
+					
+					val = raw_input("Enter Amount (in $ and c, eg. XX.YY): \n")
+					if float(val) >= 0:
+						val = float(val)
+					else:
+						raise ValueError
+				except ValueError:
+					print("Invalid input")
+					sys.exit(999)
+
+				newTrans = (transactions[0][0],transactions[0][1],val,transType,theDate)
+				print("Making transaction...")
+ 				print("\n--------")
+				if newTrans[3] == "W":
+					print(str(newTrans[4]) + " - Withdrew - " + str(newTrans[2]))
+				elif newTrans[3] == "D":
+					print(str(newTrans[4]) + " - Deposited - " + str(newTrans[2])) 
+				print("--------\n")
+				totalChanges.append(newTrans)
+				
+			else:
+				print("Creating New Acc with number " + str(view))
+				newName = raw_input("Input Full Name:\n")
+				newAccNum = view
+				newDate = theDate
+				
+				try:
+					transType = str(raw_input("Withdrawal (w) or Deposit (d)?\n"))
+					if transType in ["w", "W"]:
+						transType = "W"
+					elif transType in ["d", "D"]:
+						transType = "D"
+					else:
+						raise ValueError
+					
+					val = raw_input("Enter Amount (in $ and c, eg. XX.YY): \n")
+					if float(val) >= 0:
+						val = float(val)
+					else:
+						raise ValueError
+				except ValueError:
+					print("Invalid input")
+					sys.exit(999)
+
+				newTrans = (newName,newAccNum,val,transType,theDate)
+				print("Making transaction...")
+ 				print("\n--------")
+				if newTrans[3] == "W":
+					print(str(newTrans[4]) + " - Withdrew - " + str(newTrans[2]))
+				elif newTrans[3] == "D":
+					print(str(newTrans[4]) + " - Deposited - " + str(newTrans[2])) 
+				print("--------\n")
+				totalChanges.append(newTrans)
+
+		except ValueError, val:
+				if view == "q" or view == "Q":
+					sys.exit(999)
+				else:
+					print("Invalid input")
+		updateDB(totalChanges)
+		cont=raw_input("Back to menu? (Y/N):\n")
+#-------------------------------------------------------------#
+
+#-------------------------------------------------------------#
+# setting up the main/landing menu
+
+questionMark = "Accounts Utility\n\nUsage:\n\n-i view account information\n-h view account history\n-t begin a new transaction\n-? view this usage message again\n-q quit at any time\n"
+
+try:
+	args = sys.argv[1]
+except:
+	print("\nNo option given!\n" + questionMark)
+	sys.exit(999)
+
+opts = ["-i", "-h", "-t", "-?", "-q"]
+if args not in opts:
+	print("\nInvalid option! " + questionMark)
+	sys.exit(999)
+elif args == "-i":
+	accInfo(allData)
+elif args == "-h":
+	history(allData)
+elif args == "-t":
+	transaction(allData)
+elif args == "-?":
+	print("\nDisplaying Help: " + questionMark)
+elif args == "-q":
+	sys.exit(999)
